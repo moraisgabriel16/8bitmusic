@@ -1,0 +1,16 @@
+{
+  "name": "8bitmusic",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Pixel Rave: groovebox em pixel art com síntese Web Audio.",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "node server.mjs",
+    "start": "node server.mjs",
+    "check": "node --check dist/app.js && node --check dist/audio.js && node --check server.mjs",
+    "build": "npm run check"
+  }
+}

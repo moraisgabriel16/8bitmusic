@@ -9,11 +9,13 @@ export class Engine{
  env(t,length,level,dest=this.input){const g=this.ctx.createGain();g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(Math.max(.0002,level),t+.004);g.gain.exponentialRampToValueAtTime(.0001,t+length);g.connect(dest);return g;}
  tone(t,freq,type,length,level,dest=this.input,detune=0){const o=this.ctx.createOscillator();o.type=type;o.frequency.setValueAtTime(freq,t);o.detune.value=detune;const g=this.env(t,length,level,dest);o.connect(g);o.start(t);this.source(o,t+length+.03,dest===this.input?[g]:[g,dest]);return o;}
  hiss(t,length,level,freq,type='highpass'){const n=this.ctx.createBufferSource();n.buffer=this.noise;const f=this.ctx.createBiquadFilter();f.type=type;f.frequency.value=freq;const g=this.env(t,length,level);n.connect(f);f.connect(g);n.start(t);this.source(n,t+length+.02,[f,g]);}
- trigger(id,value,t){const s=this.state,step=60/s.bpm/4;
- if(id==='kick'){const length=.2+s.punch/100*.28;const o=this.tone(t,155,'sine',length,.9);o.frequency.exponentialRampToValueAtTime(s.genre==='dnb'?44:48,t+.07);this.hiss(t,.012,.07,6000);}
- if(id==='clap'){for(let i=0;i<3;i++)this.hiss(t+i*.012,i===2?.15:.022,.19,1300,'bandpass');this.tone(t,180,'triangle',.08,.08);}
- if(id==='hat'){this.hiss(t,.045,.14,8500);}
- if(id==='open'){this.hiss(t,.19,.12,6500);}
+ trigger(id,value,t){const s=this.state,step=60/s.bpm/4,funk=s.genre==='funk';
+ if(id==='kick'){const length=funk?.13+s.punch/100*.13:.2+s.punch/100*.28;const o=this.tone(t,funk?170:155,'sine',length,.9);o.frequency.exponentialRampToValueAtTime(funk?54:s.genre==='dnb'?44:48,t+(funk?.045:.07));this.hiss(t,.012,funk?.1:.07,6000);}
+ if(id==='clap'){for(let i=0;i<3;i++)this.hiss(t+i*.012,i===2?(funk?.095:.15):.022,.19,funk?1800:1300,'bandpass');this.tone(t,funk?340:180,'triangle',funk?.045:.08,funk?.16:.08);}
+ if(id==='hat'){this.hiss(t,funk?.03:.045,funk?.1:.14,funk?6500:8500);}
+ if(id==='open'){if(funk){const tom=this.tone(t,230,'sine',.18,.48);tom.frequency.exponentialRampToValueAtTime(95,t+.13);this.tone(t,360,'triangle',.055,.07);this.hiss(t,.018,.055,2200,'bandpass');}else this.hiss(t,.19,.12,6500);}
+ if(funk&&id==='bass'){const freq=hz(bassNotes[value-1]),length=step*2.2;const sub=this.tone(t,freq*1.35,'sine',length,.46);sub.frequency.exponentialRampToValueAtTime(freq,t+.045);const filter=this.ctx.createBiquadFilter();filter.type='lowpass';filter.frequency.value=110+s.cutoff*13;filter.connect(this.input);this.tone(t,freq,'triangle',length,.15,filter);return;}
+ if(funk&&id==='synth'){const filter=this.ctx.createBiquadFilter();filter.type='lowpass';filter.frequency.value=750+s.cutoff*32;filter.connect(this.input);filter.connect(this.delay);this.tone(t,hz(leadNotes[value-1]),'square',step*.7,.095,filter);return;}
  if(id==='bass'){const n=bassNotes[value-1],freq=hz(n);const filter=this.ctx.createBiquadFilter();filter.type='lowpass';filter.Q.value=s.genre==='techno'?10:4;const low=90+s.cutoff/100*3200;filter.frequency.setValueAtTime(low*2,t);filter.frequency.exponentialRampToValueAtTime(Math.max(60,low*.55),t+step*.9);filter.connect(this.input);const length=step*(s.genre==='dnb'?2.5:1.2);this.tone(t,freq,s.genre==='dnb'?'sawtooth':'sawtooth',length,.23,filter,-5);if(s.genre==='dnb')this.tone(t,freq,'sawtooth',length,.18,filter,7);this.tone(t,freq,'sine',length,.28);}
  if(id==='synth'){const filter=this.ctx.createBiquadFilter();filter.type='lowpass';filter.frequency.value=1200+s.cutoff*35;filter.Q.value=.7;filter.connect(this.input);filter.connect(this.delay);const freq=hz(leadNotes[value-1]);const length=step*(s.genre==='trance'?2.3:1.6);this.tone(t,freq,'sawtooth',length,.09,filter,-9);this.tone(t,freq,'sawtooth',length,.09,filter,9);if(s.genre==='house')this.tone(t,freq*2**(7/12),'triangle',length,.07,filter);}
  }

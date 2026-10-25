@@ -1,6 +1,6 @@
 # 8bitmusic · Pixel Rave
 
-Groovebox em pixel art para House, Techno, Trance e Drum & Bass. Sequenciador de 16 passos, bateria, baixo, synth, filtros, delay e osciloscópio. HTML, CSS e JavaScript com Web Audio, sem dependências de runtime.
+Groovebox em pixel art para House, Techno, Trance, Drum & Bass e Funk Brasileiro. Sequenciador de 16 passos, bateria, baixo, synth, filtros, delay e osciloscópio. HTML, CSS e JavaScript com Web Audio, sem dependências de runtime.
 
 ## Rodar localmente
 
@@ -32,6 +32,8 @@ Play ou espaço inicia/pausa; Stop volta ao início. Escolha um estilo, altere o
 Punch controla a duração do kick, Cutoff afeta os filtros das notas seguintes, Space controla o delay do synth e Master controla a saída. A reprodução pausa ao deixar a página em segundo plano.
 
 Sessões são preservadas no armazenamento local do navegador e podem ser baixadas/reabertas em JSON. A exportação WAV renderiza quatro compassos e dois segundos de cauda, em estéreo PCM de 16 bits a 44,1 kHz.
+
+O preset Funk Brasileiro parte de 130 BPM, com bumbo sincopado inspirado no tamborzão, palma/caixa curta, ganzá, tom sintetizado, subgrave estilo 808 e melodia curta. As seis pistas continuam editáveis, com os mesmos controles e exportação WAV.
 
 ## Estrutura
 

@@ -76,7 +76,7 @@ export function createPatch(genre='techno',master=55,presetId){
  if(!Object.hasOwn(presets,genre))throw new Error('Estilo inválido.');
  const p=presetId?getPreset(presetId):allPresets.find(p=>p.genre===genre);
  if(!p||p.genre!==genre)throw new Error('Preset inválido.');
- return {version:3,genre,presetId:p.id,kit:p.kit,swing:p.swing,name:p.name,bpm:p.bpm,params:{...defaults,...presets[genre].params,...p.params,master},routes:defaultRoutes.map(r=>[...r]),...arrangePreset(p),rhythm:true,gate:p.gate};
+ return {version:3,muted:Array(8).fill(false),bypass:{},modAmounts:{},genre,presetId:p.id,kit:p.kit,swing:p.swing,name:p.name,bpm:p.bpm,params:{...defaults,...presets[genre].params,...p.params,master},routes:defaultRoutes.map(r=>[...r]),...arrangePreset(p),rhythm:true,gate:p.gate};
 }
 export const stepDuration=(p,i)=>60/p.bpm/4*(1+(i%2?-1:1)*(p.swing||0)/100);
 export function migratePatch(p){
@@ -93,7 +93,10 @@ export function validatePatch(s){
  if(!Array.isArray(s.sequence)||s.sequence.length!==(s.version===3?64:16)||!s.sequence.every(n=>Number.isInteger(n)&&(n===0||(n>=24&&n<=84))))return false;
  if(!Array.isArray(s.drums)||s.drums.length!==(s.version===3?8:4)||!s.drums.every(row=>Array.isArray(row)&&row.length===(s.version===3?64:16)&&row.every(n=>Number.isFinite(n)&&n>=0&&n<=1)))return false;
  if(s.version===3&&(!getPreset(s.presetId)||getPreset(s.presetId).genre!==s.genre||!allPresets.some(p=>p.kit===s.kit)||!Number.isFinite(s.swing)||s.swing<0||s.swing>30))return false;
- if(!Array.isArray(s.routes)||s.routes.length>30||!s.routes.every(r=>Array.isArray(r)&&r.length===2&&canConnect(...r)))return false;
+ if(s.muted!==undefined&&(!Array.isArray(s.muted)||s.muted.length!==8||!s.muted.every(v=>typeof v==='boolean')))return false;
+ if(s.bypass!==undefined&&(!s.bypass||Array.isArray(s.bypass)||typeof s.bypass!=='object'||!Object.entries(s.bypass).every(([k,v])=>['filter','drive','delay'].includes(k)&&typeof v==='boolean')))return false;
+ if(s.modAmounts!==undefined&&(!s.modAmounts||Array.isArray(s.modAmounts)||typeof s.modAmounts!=='object'||!Object.entries(s.modAmounts).every(([k,v])=>Number.isFinite(v)&&v>=-100&&v<=100&&Array.isArray(s.routes)&&s.routes.some(r=>Array.isArray(r)&&r.join('|')===k&&ports[r[0]]?.type==='cv'))))return false;
+ if(!Array.isArray(s.routes)||s.routes.length>64||!s.routes.every(r=>Array.isArray(r)&&r.length===2&&canConnect(...r)))return false;
  return new Set(s.routes.map(r=>r.join('|'))).size===s.routes.length;
 }
 export const noteName=n=>n===0?'—':['C','C♯','D','D♯','E','F','F♯','G','G♯','A','A♯','B'][n%12]+(Math.floor(n/12)-1);

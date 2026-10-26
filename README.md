@@ -31,7 +31,7 @@ Play ou espaço inicia/para o sequenciador; Stop e Escape param todos os sons. T
 
 Arraste os knobs para cima/baixo, use Shift para precisão ou ajuste com as setas do teclado. Duplo clique restaura o valor inicial do preset. Toque com mouse, touch ou teclas `A W S E D F T G Y H U J K O L P ;`. O synth é monofônico, com prioridade para a última nota. Tocar manualmente pausa o sequenciador; sair da aba interrompe o áudio.
 
-Para conectar, clique numa saída e depois numa entrada, ou arraste entre jacks. Clique em um cabo para removê-lo; clicar numa entrada sem saída selecionada remove os cabos daquela entrada. Os sinais são reais: desconectar a saída silencia o sintetizador. Áudio e CV são tipados; o grafo de áudio segue estágios crescentes, sem ciclos entre módulos. Delay possui realimentação interna controlada. A bateria opcional entra diretamente na saída.
+Para conectar, toque em duas portas em qualquer ordem ou arraste entre elas. Portas compatíveis ficam iluminadas e o arraste exibe um cabo provisório. O painel de conexões oferece seletores filtrados para ligar módulos distantes no celular. Conexões repetidas são idempotentes; entradas podem somar vários sinais. A lista permite inspecionar cada rota e removê-la explicitamente pelo ×. Os cabos desenhados não capturam cliques sobre os controles. Cada cabo CV tem intensidade de −100% a +100%, incluindo inversão de modulação. Áudio segue estágios crescentes sem ciclos; delay tem realimentação própria. A bateria entra diretamente na saída.
 
 Patches v3 preservam parâmetros, cabos, sequência e bateria em JSON e localStorage. Os patches antigos da groovebox continuam usando seu formato v1 e a página original. Exportar WAV renderiza quatro compassos e pelo menos três segundos de cauda, em estéreo PCM de 16 bits a 44,1 kHz.
 
@@ -63,7 +63,7 @@ O rack é monofônico, possui módulos fixos e um padrão de quatro compassos. N
 
 ## Verificação
 
-`npm run build` verifica sintaxe e executa sete testes de estado, roteamento, biblioteca e geração de percussão. Testes de navegador cobrem reprodução, presets, knobs, teclado, conexões, salvar/abrir patches e WAV. O áudio exportado foi verificado: sinal não nulo com o patch conectado; silêncio digital ao desconectar a saída com a bateria desligada.
+`npm run build` verifica sintaxe e executa 12 testes de estado, roteamento, edição, biblioteca e geração de percussão. Testes de navegador cobrem reprodução, presets, knobs, teclado, conexões, salvar/abrir patches e WAV. O áudio exportado foi verificado: sinal não nulo com o patch conectado; silêncio digital ao desconectar a saída com a bateria desligada.
 
 ## Biblioteca v3 e celular
 
@@ -76,3 +76,17 @@ A percussão em `dist/synth/drums.js` usa sons originais sintetizados (membranas
 Importação e recuperação automática de patches modulares v2 preservam as edições, repetindo seu compasso em quatro e adicionando canais vazios. Novas gravações usam a chave v3; a chave antiga permanece intacta.
 
 Em telas estreitas, o rack vira uma coluna, com seletor fixo para navegar pelos módulos, knobs maiores e sequência em grade de quatro colunas. Tablets usam duas colunas de módulos. Bateria e teclado têm rolagem horizontal independente. Layout verificado em larguras de 320 e 390 pixels no navegador desktop; ainda não testado em aparelho físico/iOS.
+
+## Interações de edição
+
+Desfazer/refazer mantém até 80 estados completos durante a sessão, incluindo presets carregados, cabos, parâmetros, notas, bypass e bateria. Movimentos contínuos de um mesmo controle são agrupados. Os atalhos são Ctrl/Cmd+Z e Ctrl/Cmd+Shift+Z (ou Ctrl+Y), exceto dentro de campos de edição.
+
+No compasso atual: copiar/colar inclui synth e oito vozes de bateria; duplicar envia para o compasso seguinte (o quarto volta ao primeiro); as setas deslocam o groove por um passo; Notas ± transpõe um semitom preservando pausas e limites. Limpar compasso apaga suas notas e bateria. Limpar notas continua apagando apenas o synth dos quatro compassos. Editar passos congela o acompanhamento automático para evitar mudanças de página durante a edição.
+
+Toque no valor abaixo de um knob para digitar uma medida exata ou restaurar o preset. Os módulos Filter, Drive e Delay têm bypass. O teclado permite alterar oitavas; nomes e notas acompanham a seleção. Na bateria, o nome da peça serve para ouvi-la e M silencia o canal no groove. Passos de bateria e notas também oferecem escuta ao editar com o sequenciador parado. Swing é ajustável de 0% a 30%.
+
+Stop silencia e descarta a instância de áudio após uma breve queda de volume para evitar que ecos anteriores reapareçam ao reiniciar. Editar o patch encerra uma prévia de preset independente.
+
+### Regressão de áudio no navegador
+
+Além dos testes Node, `tests/audio.browser.html` verifica o motor real com OfflineAudioContext: sinal conectado, bypass de filtro, CV zerado e invertido, silêncio sem saída, percussão e mute dos oito canais. Para executar localmente, copie-o temporariamente para `dist/__audio-check.html`, abra essa página no servidor e clique em Executar testes de áudio. Remova a cópia antes de publicar. Os sete cenários passaram nesta revisão; os testes de interação também cobriram arraste real, conexão começando pela entrada, repetição sem remoção, histórico e layout de 320/390 pixels. Teste em aparelho físico continua pendente.

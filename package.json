@@ -10,7 +10,7 @@
   "scripts": {
     "dev": "node server.mjs",
     "start": "node server.mjs",
-    "check": "node --check dist/app.js && node --check dist/audio.js && node --check dist/synth/app.js && node --check dist/synth/engine.js && node --check dist/synth/library.js && node --check dist/synth/drums.js && node --check dist/synth/patches.js && node --check server.mjs",
+    "check": "node --check dist/app.js && node --check dist/audio.js && node --check dist/synth/app.js && node --check dist/synth/engine.js && node --check dist/synth/editing.js && node --check dist/synth/connections.js && node --check dist/synth/library.js && node --check dist/synth/drums.js && node --check dist/synth/patches.js && node --check server.mjs",
     "test": "node --test tests/*.test.mjs",
     "build": "npm run check && npm test"
   }

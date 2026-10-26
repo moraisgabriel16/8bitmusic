@@ -1,0 +1,21 @@
+<!doctype html><meta charset="utf-8"><title>Pixel Rave · DSP regression</title>
+<style>body{background:#152025;color:#d3e0bb;font:16px monospace;padding:30px}button{padding:15px}pre{white-space:pre-wrap}</style>
+<h1>Web Audio regression</h1><p>Copie este arquivo para dist/__audio-check.html para testar no servidor local. Remova a cópia ao terminar.</p><button id="run">Executar testes de áudio</button><pre id="results">Aguardando.</pre>
+<script type="module">
+import {createPatch} from './synth/patches.js';
+import {ModularSynth} from './synth/engine.js';
+const rms=data=>Math.sqrt(data.reduce((sum,x)=>sum+x*x,0)/data.length);
+async function render(patch){const ctx=new OfflineAudioContext(1,22050,22050),synth=new ModularSynth(ctx,patch);synth.enable();for(let i=0;i<8;i++)synth.step(i,.05+i*.1);const buffer=await ctx.startRendering();synth.dispose();const data=buffer.getChannelData(0).slice(6000,19000);if(!data.every(Number.isFinite))throw new Error('Non-finite audio');return data;}
+document.querySelector('#run').onclick=async()=>{const results=[],check=(name,pass,details)=>{results.push({name,pass,details});document.querySelector('#results').textContent=JSON.stringify(results,null,2);if(!pass)throw new Error(name);};
+try{
+ const patch=createPatch('techno');patch.rhythm=false;patch.sequence.fill(69);patch.params={...patch.params,sub:0,noise:0,envAmount:0,lfoDepth:0,cutoff:80,master:55,attack:.003,decay:.1,sustain:65,release:.03};patch.routes=[['oscA.out','filter.in'],['filter.out','vca.in'],['env.out','vca.cv'],['vca.out','output.in']];
+ const filtered=await render(patch);check('Connected synth has audio',rms(filtered)>.0001,rms(filtered));
+ const bypass=structuredClone(patch);bypass.bypass.filter=true;const open=await render(bypass);check('Filter bypass restores attenuated signal',rms(open)>rms(filtered)*2,{filtered:rms(filtered),bypass:rms(open)});
+ const zero=structuredClone(patch);zero.modAmounts={'env.out|vca.cv':0};const mutedCV=await render(zero);check('Zero VCA CV silences envelope',rms(mutedCV)<1e-8,rms(mutedCV));
+ const inverted=structuredClone(patch);inverted.modAmounts={'env.out|vca.cv':-100};const inverse=await render(inverted);let dot=0,power=0;for(let i=0;i<filtered.length;i++){dot+=filtered[i]*inverse[i];power+=filtered[i]*filtered[i];}check('Negative CV inverts envelope',dot/power<-.9,dot/power);
+ const disconnected=structuredClone(patch);disconnected.routes=disconnected.routes.filter(r=>r[1]!=='output.in');check('Disconnected synth is silent',rms(await render(disconnected))<1e-8);
+ const drums=createPatch('funk');drums.sequence.fill(0);drums.routes=[];const beat=await render(drums);check('Percussion reaches master',rms(beat)>.001,rms(beat));drums.muted.fill(true);check('All drum mutes silence backing',rms(await render(drums))<1e-8);
+ document.querySelector('#results').dataset.passed='true';
+}catch(e){document.querySelector('#results').textContent+='\nFAIL: '+e.message;document.querySelector('#results').dataset.passed='false';}
+};
+</script>

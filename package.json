@@ -3,14 +3,15 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Pixel Rave: groovebox em pixel art com síntese Web Audio.",
+  "description": "Pixel Rave: sintetizador modular com patch cables, sequenciador e groovebox em pixel art.",
   "engines": {
     "node": ">=22"
   },
   "scripts": {
     "dev": "node server.mjs",
     "start": "node server.mjs",
-    "check": "node --check dist/app.js && node --check dist/audio.js && node --check server.mjs",
-    "build": "npm run check"
+    "check": "node --check dist/app.js && node --check dist/audio.js && node --check dist/synth/app.js && node --check dist/synth/engine.js && node --check dist/synth/patches.js && node --check server.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "build": "npm run check && npm test"
   }
 }

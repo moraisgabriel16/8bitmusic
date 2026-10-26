@@ -1,6 +1,6 @@
 # 8bitmusic · Pixel Rave
 
-Groovebox em pixel art para House, Techno, Trance, Drum & Bass e Funk Brasileiro. Sequenciador de 16 passos, bateria, baixo, synth, filtros, delay e osciloscópio. HTML, CSS e JavaScript com Web Audio, sem dependências de runtime.
+Sintetizador modular no navegador, com 10 módulos, cabos funcionais, teclado e sequenciador de 16 passos. Presets de House, Techno, Trance, Drum & Bass e Funk Brasileiro. HTML, CSS e JavaScript com Web Audio, sem dependências de runtime. A groovebox original em pixel art continua disponível em `groovebox.html`.
 
 ## Rodar localmente
 
@@ -11,7 +11,7 @@ npm install
 npm run dev
 ```
 
-Abra http://127.0.0.1:4173. `npm run build` verifica a sintaxe; os arquivos estáticos prontos para publicação ficam em `dist/`.
+Abra http://127.0.0.1:4173. `npm run build` verifica a sintaxe e executa os testes de patches/roteamento. Os arquivos estáticos prontos para publicação ficam em `dist/`.
 
 ## Deploy na Vercel
 
@@ -27,26 +27,40 @@ O servidor `server.mjs` serve apenas para desenvolvimento local; a Vercel public
 
 ## Como tocar
 
-Play ou espaço inicia/pausa; Stop volta ao início. Escolha um estilo, altere o BPM e clique nos pads. Nas pistas de baixo e synth, cliques sucessivos percorrem oito notas e desligam o pad. M silencia cada pista; clicar no nome da pista toca seu timbre.
+Play ou espaço inicia/para o sequenciador; Stop e Escape param todos os sons. Trocar a vibe carrega parâmetros, cabos, notas, BPM e bateria do preset. Se estiver tocando, o novo groove reinicia no primeiro passo. O volume master é preservado.
 
-Punch controla a duração do kick, Cutoff afeta os filtros das notas seguintes, Space controla o delay do synth e Master controla a saída. A reprodução pausa ao deixar a página em segundo plano.
+Arraste os knobs para cima/baixo, use Shift para precisão ou ajuste com as setas do teclado. Duplo clique restaura o valor inicial do preset. Toque com mouse, touch ou teclas `A W S E D F T G Y H U J K O L P ;`. O synth é monofônico, com prioridade para a última nota. Tocar manualmente pausa o sequenciador; sair da aba interrompe o áudio.
 
-Sessões são preservadas no armazenamento local do navegador e podem ser baixadas/reabertas em JSON. A exportação WAV renderiza quatro compassos e dois segundos de cauda, em estéreo PCM de 16 bits a 44,1 kHz.
+Para conectar, clique numa saída e depois numa entrada, ou arraste entre jacks. Clique em um cabo para removê-lo; clicar numa entrada sem saída selecionada remove os cabos daquela entrada. Os sinais são reais: desconectar a saída silencia o sintetizador. Áudio e CV são tipados; o grafo de áudio segue estágios crescentes, sem ciclos entre módulos. Delay possui realimentação interna controlada. A bateria opcional entra diretamente na saída.
 
-O preset Funk Brasileiro parte de 130 BPM, com bumbo sincopado inspirado no tamborzão, palma/caixa curta, ganzá, tom sintetizado, subgrave estilo 808 e melodia curta. As seis pistas continuam editáveis, com os mesmos controles e exportação WAV.
+Patches v2 preservam parâmetros, cabos, sequência e bateria em JSON e localStorage. Os patches antigos da groovebox continuam usando seu formato v1 e a página original. Exportar WAV renderiza quatro compassos e pelo menos três segundos de cauda, em estéreo PCM de 16 bits a 44,1 kHz.
+
+## Módulos
+
+- OSC A / OSC B: seno, triângulo, serra e quadrada; afinação, detune e entrada de pitch CV.
+- Mixer: volumes dos osciladores, suboscilador e ruído branco.
+- Filter: low-pass, band-pass e high-pass, cutoff, ressonância e quantidade de envelope.
+- VCA: amplitude controlada pelo envelope, nível e portamento.
+- Envelope: attack, decay, sustain e release; saída CV para VCA/filtro.
+- LFO: quatro ondas, velocidade e profundidade; modula pitch ou cutoff.
+- Saturation: waveshaper com oversampling 2×, filtro de tone e blend.
+- Tape Echo: delay, feedback e mix.
+- Output: master, osciloscópio, medidor de nível e compressor/limitador.
 
 ## Estrutura
 
-- `dist/index.html`, `style.css` e `app.js`: interface, sequenciador, sessões e animações.
-- `dist/audio.js`: síntese, scheduler Web Audio, efeitos e exportação offline.
+- `dist/index.html` e `dist/synth/`: rack modular, motor Web Audio, presets, teclado, roteamento e exportação.
+- `dist/groovebox.html`, `style.css` e `app.js`: groovebox original em pixel art.
+- `dist/audio.js`: bateria sintetizada compartilhada e motor da groovebox.
+- `tests/patches.test.mjs`: integridade dos presets, independência dos estados, validação de importação e compatibilidade de rotas.
 - `dist/assets/machines.png`: atlas RGBA 1254×1254 com quatro máquinas e quatro quadros por máquina, gerado com imagegen.
 - `dist/assets/atlas.json`: retângulos dos quadros; renderização em canvas sem suavização.
 - `dist/assets/atlas-prompt.txt`: prompt utilizado para gerar a arte.
 
-O motor sintetiza os sons no navegador, sem carregar amostras externas. O scheduler antecipa 120 ms, com atualização a cada 25 ms, e sincroniza os sprites pelo relógio do áudio.
+O motor sintetiza os sons no navegador, sem carregar amostras externas. O scheduler modular antecipa 110 ms, com atualização a cada 25 ms. A interface acompanha o relógio do AudioContext. A renderização offline usa o mesmo motor e as mesmas conexões da reprodução ao vivo.
 
-Protótipo com um padrão de um compasso em Fá menor, sem roteamento por cabos ou arranger.
+O rack é monofônico, possui módulos fixos e um padrão de um compasso. Não inclui MIDI, gravação de microfone, arranger ou criação de novos módulos.
 
 ## Verificação
 
-`npm run build` verifica a sintaxe dos módulos. O protótipo foi testado em navegador real: reprodução, carregamento do atlas, presets, edição de pads, mute, salvamento e recuperação de sessão, exportação WAV e console sem erros. O WAV foi inspecionado para formato PCM, taxa de amostragem e sinal não nulo.
+`npm run build` verifica sintaxe e executa quatro testes de estado/roteamento. Testes de navegador cobrem reprodução, presets, knobs, teclado, conexões, salvar/abrir patches e WAV. O áudio exportado foi verificado: sinal não nulo com o patch conectado; silêncio digital ao desconectar a saída com a bateria desligada.

@@ -1,6 +1,6 @@
 # 8bitmusic · Pixel Rave
 
-Sintetizador modular no navegador, com 10 módulos, cabos funcionais, teclado e sequenciador de 16 passos. Presets de House, Techno, Trance, Drum & Bass e Funk Brasileiro. HTML, CSS e JavaScript com Web Audio, sem dependências de runtime. A groovebox original em pixel art continua disponível em `groovebox.html`.
+Sintetizador modular no navegador, com 10 módulos, cabos funcionais, teclado e sequenciador de 64 passos (quatro compassos). 25 presets de House, Techno, Trance, Drum & Bass e Funk Brasileiro. HTML, CSS e JavaScript com Web Audio, sem dependências de runtime. A groovebox original em pixel art continua disponível em `groovebox.html`.
 
 ## Rodar localmente
 
@@ -33,7 +33,7 @@ Arraste os knobs para cima/baixo, use Shift para precisão ou ajuste com as seta
 
 Para conectar, clique numa saída e depois numa entrada, ou arraste entre jacks. Clique em um cabo para removê-lo; clicar numa entrada sem saída selecionada remove os cabos daquela entrada. Os sinais são reais: desconectar a saída silencia o sintetizador. Áudio e CV são tipados; o grafo de áudio segue estágios crescentes, sem ciclos entre módulos. Delay possui realimentação interna controlada. A bateria opcional entra diretamente na saída.
 
-Patches v2 preservam parâmetros, cabos, sequência e bateria em JSON e localStorage. Os patches antigos da groovebox continuam usando seu formato v1 e a página original. Exportar WAV renderiza quatro compassos e pelo menos três segundos de cauda, em estéreo PCM de 16 bits a 44,1 kHz.
+Patches v3 preservam parâmetros, cabos, sequência e bateria em JSON e localStorage. Os patches antigos da groovebox continuam usando seu formato v1 e a página original. Exportar WAV renderiza quatro compassos e pelo menos três segundos de cauda, em estéreo PCM de 16 bits a 44,1 kHz.
 
 ## Módulos
 
@@ -51,7 +51,7 @@ Patches v2 preservam parâmetros, cabos, sequência e bateria em JSON e localSto
 
 - `dist/index.html` e `dist/synth/`: rack modular, motor Web Audio, presets, teclado, roteamento e exportação.
 - `dist/groovebox.html`, `style.css` e `app.js`: groovebox original em pixel art.
-- `dist/audio.js`: bateria sintetizada compartilhada e motor da groovebox.
+- `dist/audio.js`: bateria e motor da groovebox original.
 - `tests/patches.test.mjs`: integridade dos presets, independência dos estados, validação de importação e compatibilidade de rotas.
 - `dist/assets/machines.png`: atlas RGBA 1254×1254 com quatro máquinas e quatro quadros por máquina, gerado com imagegen.
 - `dist/assets/atlas.json`: retângulos dos quadros; renderização em canvas sem suavização.
@@ -59,8 +59,20 @@ Patches v2 preservam parâmetros, cabos, sequência e bateria em JSON e localSto
 
 O motor sintetiza os sons no navegador, sem carregar amostras externas. O scheduler modular antecipa 110 ms, com atualização a cada 25 ms. A interface acompanha o relógio do AudioContext. A renderização offline usa o mesmo motor e as mesmas conexões da reprodução ao vivo.
 
-O rack é monofônico, possui módulos fixos e um padrão de um compasso. Não inclui MIDI, gravação de microfone, arranger ou criação de novos módulos.
+O rack é monofônico, possui módulos fixos e um padrão de quatro compassos. Não inclui MIDI, gravação de microfone, arranger ou criação de novos módulos.
 
 ## Verificação
 
-`npm run build` verifica sintaxe e executa quatro testes de estado/roteamento. Testes de navegador cobrem reprodução, presets, knobs, teclado, conexões, salvar/abrir patches e WAV. O áudio exportado foi verificado: sinal não nulo com o patch conectado; silêncio digital ao desconectar a saída com a bateria desligada.
+`npm run build` verifica sintaxe e executa sete testes de estado, roteamento, biblioteca e geração de percussão. Testes de navegador cobrem reprodução, presets, knobs, teclado, conexões, salvar/abrir patches e WAV. O áudio exportado foi verificado: sinal não nulo com o patch conectado; silêncio digital ao desconectar a saída com a bateria desligada.
+
+## Biblioteca v3 e celular
+
+Cada estilo oferece cinco grooves com BPM, swing, síntese, oito vozes de bateria, intensidade dos golpes e viradas de quatro compassos. House: Deep, Chicago, Jackin, Acid e Afro; Techno: Minimal, Dub, Detroit, Acid e Industrial; Trance: Classic, Progressive, Uplifting, Goa e Psy; D&B: Liquid, Jungle, Jump Up, Neuro e Deep; Funk: Tamborzão, Volt Mix, Beatbox, 150 BPM e Mandelão.
+
+Selecionar um preset permite ouvir uma prévia de quatro compassos sem substituir o patch. Carregar aplica a escolha; trocar o estilo carrega sua primeira base. Os botões de compasso escolhem os 16 passos editáveis. Desmarque Acompanhar reprodução para editar um compasso fixo. Na bateria, cada toque alterna pausa, suave, médio e forte. O gate controla a duração das notas do synth.
+
+A percussão em `dist/synth/drums.js` usa sons originais sintetizados (membranas, ruído, transientes e saturação). Os grooves de funk são interpretações, não transcrições ou samples de gravações. O tamborzão usa bumbo, dois toms, conga e slap; beatbox usa ataques sintetizados. A referência de instrumentação foi a figura de Carlos Palombini em [A Danceable Shower of Bullets](https://www.researchgate.net/figure/The-tamborzao-loop-on-the-lower-line-ambo-kick-K01-on-the-middle-lines-attack-tom-1_fig4_337172234).
+
+Importação e recuperação automática de patches modulares v2 preservam as edições, repetindo seu compasso em quatro e adicionando canais vazios. Novas gravações usam a chave v3; a chave antiga permanece intacta.
+
+Em telas estreitas, o rack vira uma coluna, com seletor fixo para navegar pelos módulos, knobs maiores e sequência em grade de quatro colunas. Tablets usam duas colunas de módulos. Bateria e teclado têm rolagem horizontal independente. Layout verificado em larguras de 320 e 390 pixels no navegador desktop; ainda não testado em aparelho físico/iOS.

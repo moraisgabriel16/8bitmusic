@@ -10,7 +10,7 @@ test('every vibe produces a complete, distinct, exportable patch',()=>{
 });
 test('changing or clearing a patch cannot corrupt the preset loaded next',()=>{
  const first=createPatch('funk');first.sequence.fill(0);first.drums[0].fill(0);first.params.cutoff=40;first.routes[0][1]='output.in';
- const restored=createPatch('funk');assert.ok(restored.sequence.some(Boolean));assert.ok(restored.drums[0].some(Boolean));assert.equal(restored.params.cutoff,900);assert.equal(restored.routes[0][1],'mixer.a');
+ const restored=createPatch('funk');assert.ok(restored.sequence.some(Boolean));assert.ok(restored.drums[0].some(Boolean));assert.equal(restored.params.cutoff,500);assert.equal(restored.routes[0][1],'mixer.a');
 });
 test('audio routes reject cycles and CV/audio mismatches',()=>{
  assert.ok(canConnect('oscA.out','filter.in'));assert.ok(canConnect('filter.out','vca.in'));assert.ok(canConnect('lfo.out','oscA.cv'));assert.ok(canConnect('env.out','vca.cv'));

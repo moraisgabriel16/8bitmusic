@@ -1,3 +1,4 @@
+import {allPresets,getPreset,arrangePreset} from './library.js';
 export const defaults = {
   waveA:'sawtooth', waveB:'sawtooth', tuneA:0, tuneB:0, detuneA:-7, detuneB:7,
   mixA:70, mixB:48, sub:22, noise:0, cutoff:1600, resonance:2.8, filterType:'lowpass',
@@ -71,17 +72,27 @@ export const controls = {
  delayTime:{label:'TIME',min:.03,max:.8,step:.001,unit:'s'},feedback:{label:'FEEDBACK',min:0,max:75,step:1,unit:'%'},delayMix:{label:'MIX',min:0,max:75,step:1,unit:'%'},
  master:{label:'MASTER',min:0,max:90,step:1,unit:'%'}
 };
-export function createPatch(genre='techno',master=55){
- if(!Object.hasOwn(presets,genre))throw new Error('Estilo inválido.');const p=presets[genre];
- return {version:2,genre,name:p.name,bpm:p.bpm,params:{...defaults,...p.params,master},routes:defaultRoutes.map(r=>[...r]),sequence:[...p.notes],drums:p.drums.map(r=>Array.from(r,Number)),rhythm:true,gate:65};
+export function createPatch(genre='techno',master=55,presetId){
+ if(!Object.hasOwn(presets,genre))throw new Error('Estilo inválido.');
+ const p=presetId?getPreset(presetId):allPresets.find(p=>p.genre===genre);
+ if(!p||p.genre!==genre)throw new Error('Preset inválido.');
+ return {version:3,genre,presetId:p.id,kit:p.kit,swing:p.swing,name:p.name,bpm:p.bpm,params:{...defaults,...presets[genre].params,...p.params,master},routes:defaultRoutes.map(r=>[...r]),...arrangePreset(p),rhythm:true,gate:p.gate};
+}
+export const stepDuration=(p,i)=>60/p.bpm/4*(1+(i%2?-1:1)*(p.swing||0)/100);
+export function migratePatch(p){
+ if(p?.version===3)return validatePatch(p)?p:null;
+ if(!validatePatch(p))return null;
+ const next=createPatch(p.genre,p.params.master);
+ return {...next,...p,version:3,sequence:Array.from({length:64},(_,i)=>p.sequence[i%16]),drums:Array.from({length:8},(_,r)=>Array.from({length:64},(_,i)=>r<4?p.drums[r][i%16]:0))};
 }
 export function canConnect(from,to){const a=ports[from],b=ports[to];return !!(a&&b&&a.direction==='out'&&b.direction==='in'&&a.type===b.type&&(a.type==='cv'?(from==='env.out'?['vca.cv','filter.cv'].includes(to):to!=='vca.cv'):a.rank<b.rank));}
 export function validatePatch(s){
- if(!s||s.version!==2||!Object.hasOwn(presets,s.genre)||!s.params||typeof s.name!=='string'||s.name.length>100||typeof s.rhythm!=='boolean'||!Number.isFinite(s.bpm)||s.bpm<60||s.bpm>200||!Number.isFinite(s.gate)||s.gate<10||s.gate>100)return false;
+ if(!s||![2,3].includes(s.version)||!Object.hasOwn(presets,s.genre)||!s.params||typeof s.name!=='string'||s.name.length>100||typeof s.rhythm!=='boolean'||!Number.isFinite(s.bpm)||s.bpm<60||s.bpm>200||!Number.isFinite(s.gate)||s.gate<10||s.gate>100)return false;
  if(!Object.entries(controls).every(([key,c])=>Number.isFinite(s.params[key])&&s.params[key]>=c.min&&s.params[key]<=c.max))return false;
  if(!['waveA','waveB','lfoWave'].every(k=>['sine','triangle','sawtooth','square'].includes(s.params[k]))||!['lowpass','highpass','bandpass'].includes(s.params.filterType))return false;
- if(!Array.isArray(s.sequence)||s.sequence.length!==16||!s.sequence.every(n=>Number.isInteger(n)&&(n===0||(n>=24&&n<=84))))return false;
- if(!Array.isArray(s.drums)||s.drums.length!==4||!s.drums.every(row=>Array.isArray(row)&&row.length===16&&row.every(n=>n===0||n===1)))return false;
+ if(!Array.isArray(s.sequence)||s.sequence.length!==(s.version===3?64:16)||!s.sequence.every(n=>Number.isInteger(n)&&(n===0||(n>=24&&n<=84))))return false;
+ if(!Array.isArray(s.drums)||s.drums.length!==(s.version===3?8:4)||!s.drums.every(row=>Array.isArray(row)&&row.length===(s.version===3?64:16)&&row.every(n=>Number.isFinite(n)&&n>=0&&n<=1)))return false;
+ if(s.version===3&&(!getPreset(s.presetId)||getPreset(s.presetId).genre!==s.genre||!allPresets.some(p=>p.kit===s.kit)||!Number.isFinite(s.swing)||s.swing<0||s.swing>30))return false;
  if(!Array.isArray(s.routes)||s.routes.length>30||!s.routes.every(r=>Array.isArray(r)&&r.length===2&&canConnect(...r)))return false;
  return new Set(s.routes.map(r=>r.join('|'))).size===s.routes.length;
 }
